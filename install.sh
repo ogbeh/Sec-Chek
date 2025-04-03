@@ -204,6 +204,10 @@ download_security_checker() {
         fi
     fi
     
+    # Debug: List the contents of the temp directory
+    echo -e "${BLUE}Contents of downloaded repository:${NC}"
+    ls -la "$temp_dir"
+    
     # Check if the download was successful
     if [ ! -f "$temp_dir/sec-chek.py" ]; then
         echo -e "${RED}Downloaded repository does not contain sec-chek.py${NC}"
@@ -214,6 +218,14 @@ download_security_checker() {
             echo -e "${GREEN}Found security_checker.py, renaming to sec-chek.py${NC}"
             # Rename the file
             mv "$temp_dir/security_checker.py" "$temp_dir/sec-chek.py"
+        elif [ -f "$temp_dir/sec-chek/sec-chek.py" ]; then
+            echo -e "${GREEN}Found sec-chek.py in sec-chek directory${NC}"
+            # Copy the file to the root of temp_dir
+            cp "$temp_dir/sec-chek/sec-chek.py" "$temp_dir/"
+        elif [ -f "$temp_dir/src/security_checker.py" ]; then
+            echo -e "${GREEN}Found security_checker.py in src directory, renaming to sec-chek.py${NC}"
+            # Copy and rename the file
+            cp "$temp_dir/src/security_checker.py" "$temp_dir/sec-chek.py"
         else
             echo -e "${YELLOW}Directory contents:${NC}"
             ls -la "$temp_dir"
