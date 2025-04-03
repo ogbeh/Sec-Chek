@@ -142,6 +142,7 @@ download_security_checker() {
         echo -e "${RED}Downloaded repository does not contain security_checker.py${NC}"
         rm -rf "$temp_dir"
         exit 1
+    fi
     
     echo -e "${GREEN}Download successful!${NC}"
     echo "$temp_dir"
