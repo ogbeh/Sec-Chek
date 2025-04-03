@@ -69,13 +69,20 @@ while true; do
     echo "5. Uninstall SEC-CHEK"
     echo "0. Exit"
     echo
-    echo -n "Choose an option (0-5): "
+    printf "Choose an option (0-5): "
     
-    read input
+    # Read input with timeout
+    read -t 1 -n 1 input
+    if [ -z "$input" ]; then
+        continue
+    fi
+    
+    # Clear any remaining input
+    while read -r -t 0; do read -r; done
     
     case "$input" in
         0)
-            echo -e "${GREEN}Goodbye!${NC}"
+            echo -e "\n${GREEN}Goodbye!${NC}"
             exit 0
             ;;
         1)
@@ -112,8 +119,8 @@ while true; do
             fi
             ;;
         *)
-            echo -e "${RED}Invalid option${NC}"
-            sleep 2
+            echo -e "\n${RED}Invalid option${NC}"
+            sleep 1
             ;;
     esac
 done 
