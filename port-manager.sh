@@ -9,6 +9,39 @@ NC='\033[0m' # No Color
 # Version
 VERSION="1.0.0"
 
+# Function to check and install required tools
+check_requirements() {
+    local missing_tools=()
+    
+    # Check for netstat
+    if ! command -v netstat &> /dev/null; then
+        missing_tools+=("net-tools")
+    fi
+    
+    # Check for lsof
+    if ! command -v lsof &> /dev/null; then
+        missing_tools+=("lsof")
+    fi
+    
+    if [ ${#missing_tools[@]} -ne 0 ]; then
+        echo -e "${YELLOW}Installing required tools...${NC}"
+        if command -v apt-get &> /dev/null; then
+            apt-get update
+            apt-get install -y "${missing_tools[@]}"
+        elif command -v yum &> /dev/null; then
+            yum install -y "${missing_tools[@]}"
+        elif command -v dnf &> /dev/null; then
+            dnf install -y "${missing_tools[@]}"
+        else
+            echo -e "${RED}Could not install required tools. Please install them manually:${NC}"
+            for tool in "${missing_tools[@]}"; do
+                echo "- $tool"
+            done
+            exit 1
+        fi
+    fi
+}
+
 # Function to check if running as root
 check_root() {
     if [ "$EUID" -ne 0 ]; then 
@@ -84,8 +117,16 @@ list_ports() {
     echo -e "${YELLOW}Listing all open ports...${NC}"
     if command -v netstat &> /dev/null; then
         netstat -tulpn 2>/dev/null
+    elif command -v ss &> /dev/null; then
+        ss -tulpn
+    elif command -v lsof &> /dev/null; then
+        lsof -i -P -n | grep LISTEN
     else
-        echo -e "${RED}netstat not installed. Please install it first.${NC}"
+        echo -e "${RED}No suitable tool found to list ports. Installing required tools...${NC}"
+        check_requirements
+        if command -v netstat &> /dev/null; then
+            netstat -tulpn 2>/dev/null
+        fi
     fi
 }
 
@@ -98,6 +139,7 @@ uninstall() {
 
 # Main script
 check_root
+check_requirements
 
 while true; do
     show_menu
