@@ -13,17 +13,6 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# Function to display banner
-show_banner() {
-    clear
-    echo -e "${BLUE}"
-    echo "╔═══════════════════════════════════════╗"
-    echo "║           SEC-CHEK v1.0               ║"
-    echo "║     Linux Security Checking Tool      ║"
-    echo "╚═══════════════════════════════════════╝"
-    echo -e "${NC}"
-}
-
 # Function to check firewall status
 check_firewall() {
     echo -e "\n${YELLOW}[*] Checking Firewall Status...${NC}"
@@ -69,62 +58,62 @@ uninstall() {
 
 # Main menu
 while true; do
-    show_banner
-    echo "Please select an option:"
+    clear
+    echo -e "${BLUE}=== SEC-CHEK Security Tool ===${NC}"
     echo
-    echo "1) Check Firewall Status"
-    echo "2) Check Open Ports"
-    echo "3) Check System Updates"
-    echo "4) Run All Checks"
-    echo "5) Uninstall SEC-CHEK"
-    echo "0) Exit"
+    echo "Menu Options:"
+    echo "1. Check Firewall Status"
+    echo "2. Check Open Ports"
+    echo "3. Check System Updates"
+    echo "4. Run All Checks"
+    echo "5. Uninstall SEC-CHEK"
+    echo "0. Exit"
     echo
-    echo -n "Enter choice [0-5]: "
-    read -n 1 choice
-    echo
-
-    case "$choice" in
-        0)  echo -e "${GREEN}Exiting SEC-CHEK. Goodbye!${NC}"
+    echo -n "Choose an option (0-5): "
+    
+    read input
+    
+    case "$input" in
+        0)
+            echo -e "${GREEN}Goodbye!${NC}"
             exit 0
             ;;
-        1)  clear
+        1)
+            clear
             check_firewall
             echo
-            echo -n "Press any key to continue..."
-            read -n 1
+            read -p "Press Enter to continue..."
             ;;
-        2)  clear
+        2)
+            clear
             check_ports
             echo
-            echo -n "Press any key to continue..."
-            read -n 1
+            read -p "Press Enter to continue..."
             ;;
-        3)  clear
+        3)
+            clear
             check_updates
             echo
-            echo -n "Press any key to continue..."
-            read -n 1
+            read -p "Press Enter to continue..."
             ;;
-        4)  clear
+        4)
+            clear
             check_firewall
-            echo
             check_ports
-            echo
             check_updates
             echo
-            echo -n "Press any key to continue..."
-            read -n 1
+            read -p "Press Enter to continue..."
             ;;
-        5)  clear
-            echo -e "${YELLOW}Are you sure you want to uninstall SEC-CHEK? [y/N]: ${NC}"
-            read -n 1 confirm
-            echo
-            if [[ $confirm =~ ^[Yy]$ ]]; then
+        5)
+            clear
+            read -p "Are you sure you want to uninstall? (y/N): " confirm
+            if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
                 uninstall
             fi
             ;;
-        *)  echo -e "${RED}Invalid option. Press any key to continue...${NC}"
-            read -n 1
+        *)
+            echo -e "${RED}Invalid option${NC}"
+            sleep 2
             ;;
     esac
 done 
