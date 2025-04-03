@@ -69,20 +69,21 @@ while true; do
     echo "5. Uninstall SEC-CHEK"
     echo "0. Exit"
     echo
-    printf "Choose an option (0-5): "
+    echo -n "Choose an option (0-5): "
     
-    # Read input with timeout
-    read -t 1 -n 1 input
-    if [ -z "$input" ]; then
+    # Simple read without any special options
+    read choice
+    
+    # Basic input validation
+    if [[ ! "$choice" =~ ^[0-5]$ ]]; then
+        echo -e "${RED}Invalid option. Please enter a number between 0 and 5${NC}"
+        sleep 2
         continue
     fi
     
-    # Clear any remaining input
-    while read -r -t 0; do read -r; done
-    
-    case "$input" in
+    case "$choice" in
         0)
-            echo -e "\n${GREEN}Goodbye!${NC}"
+            echo -e "${GREEN}Goodbye!${NC}"
             exit 0
             ;;
         1)
@@ -117,10 +118,6 @@ while true; do
             if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
                 uninstall
             fi
-            ;;
-        *)
-            echo -e "\n${RED}Invalid option${NC}"
-            sleep 1
             ;;
     esac
 done 
