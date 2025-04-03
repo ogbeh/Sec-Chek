@@ -205,17 +205,15 @@ download_security_checker() {
     fi
     
     # Check if the download was successful
-    if [ ! -f "$temp_dir/src/security_checker.py" ]; then
-        echo -e "${RED}Downloaded repository does not contain security_checker.py in src directory${NC}"
+    if [ ! -f "$temp_dir/sec-chek.py" ]; then
+        echo -e "${RED}Downloaded repository does not contain sec-chek.py${NC}"
         echo -e "${YELLOW}Checking for alternative locations...${NC}"
         
         # Try to find the file in the repository
         if [ -f "$temp_dir/security_checker.py" ]; then
-            echo -e "${GREEN}Found security_checker.py in root directory${NC}"
-            # Create src directory if it doesn't exist
-            mkdir -p "$temp_dir/src"
-            # Move the file to src directory
-            mv "$temp_dir/security_checker.py" "$temp_dir/src/"
+            echo -e "${GREEN}Found security_checker.py, renaming to sec-chek.py${NC}"
+            # Rename the file
+            mv "$temp_dir/security_checker.py" "$temp_dir/sec-chek.py"
         else
             echo -e "${YELLOW}Directory contents:${NC}"
             ls -la "$temp_dir"
@@ -230,7 +228,7 @@ download_security_checker() {
 
 # Function to check if security checker is already installed
 check_existing_installation() {
-    if [ -f "/opt/sec-chek/security_checker.py" ]; then
+    if [ -f "$SCRIPT_DIR/sec-chek/sec-chek.py" ]; then
         echo -e "${YELLOW}Security checker is already installed.${NC}"
         echo -e "1. Update (keep existing configuration)"
         echo -e "2. Reinstall (remove existing installation)"
@@ -245,7 +243,7 @@ check_existing_installation() {
                 ;;
             2)
                 echo -e "${BLUE}Reinstalling security checker...${NC}"
-                rm -rf /opt/sec-chek
+                rm -rf "$SCRIPT_DIR/sec-chek"
                 return 0
                 ;;
             3)
@@ -287,15 +285,15 @@ BIN_DIR="/usr/local/bin"
 # Create necessary directories
 echo -e "${BLUE}Creating installation directories...${NC}"
 mkdir -p "$BIN_DIR"
-mkdir -p "$INSTALL_DIR/src"
+mkdir -p "$INSTALL_DIR"
 
 # Download the security checker
 TEMP_DIR=$(download_security_checker)
-SOURCE_FILE="$TEMP_DIR/src/security_checker.py"
+SOURCE_FILE="$TEMP_DIR/sec-chek.py"
 
 # Check if the source file exists
 if [ ! -f "$SOURCE_FILE" ]; then
-    echo -e "${RED}Error: Could not find security_checker.py in the downloaded repository${NC}"
+    echo -e "${RED}Error: Could not find sec-chek.py in the downloaded repository${NC}"
     echo -e "${YELLOW}Expected file location: $SOURCE_FILE${NC}"
     echo -e "${YELLOW}Directory contents:${NC}"
     ls -la "$TEMP_DIR"
@@ -305,12 +303,12 @@ fi
 
 # Copy the script
 echo -e "${BLUE}Copying security checker script...${NC}"
-cp "$SOURCE_FILE" "$INSTALL_DIR/src/"
-chmod +x "$INSTALL_DIR/src/security_checker.py"
+cp "$SOURCE_FILE" "$INSTALL_DIR/"
+chmod +x "$INSTALL_DIR/sec-chek.py"
 
 # Verify the file was copied successfully
-if [ ! -f "$INSTALL_DIR/src/security_checker.py" ]; then
-    echo -e "${RED}Error: Failed to copy security_checker.py to $INSTALL_DIR/src${NC}"
+if [ ! -f "$INSTALL_DIR/sec-chek.py" ]; then
+    echo -e "${RED}Error: Failed to copy sec-chek.py to $INSTALL_DIR${NC}"
     rm -rf "$TEMP_DIR"
     exit 1
 fi
@@ -355,7 +353,7 @@ def run_check(check_type):
     print()
     
     # Run the security checker with the appropriate option
-    cmd = ["python3", "$INSTALL_DIR/src/security_checker.py", check_type]
+    cmd = ["python3", "$INSTALL_DIR/sec-chek.py", check_type]
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     
     # Show a simple progress indicator
@@ -417,11 +415,11 @@ chmod +x "$INSTALL_DIR/menu.py"
 
 # Create wrapper script
 echo -e "${BLUE}Creating wrapper script...${NC}"
-cat > "$BIN_DIR/security-checker" << EOL
+cat > "$BIN_DIR/sec-chek" << EOL
 #!/bin/bash
 if [ "\$EUID" -ne 0 ]; then 
     echo -e "${RED}This command must be run as root${NC}"
-    echo -e "${YELLOW}Please run with sudo: sudo security-checker${NC}"
+    echo -e "${YELLOW}Please run with sudo: sudo sec-chek${NC}"
     exit 1
 fi
 
@@ -431,11 +429,11 @@ if [ \$# -eq 0 ]; then
     python3 "$INSTALL_DIR/menu.py"
 else
     # Arguments provided, run the security checker with those arguments
-    python3 "$INSTALL_DIR/src/security_checker.py" "\$@"
+    python3 "$INSTALL_DIR/sec-chek.py" "\$@"
 fi
 EOL
 
-chmod +x "$BIN_DIR/security-checker"
+chmod +x "$BIN_DIR/sec-chek"
 
 # Clean up temporary directory
 echo -e "${BLUE}Cleaning up...${NC}"
@@ -445,20 +443,20 @@ rm -rf "$TEMP_DIR"
 check_firewall $DIST
 
 echo -e "${GREEN}=== Installation complete! ===${NC}"
-echo -e "You can now run the security checker by typing: ${GREEN}sudo security-checker${NC}"
+echo -e "You can now run the security checker by typing: ${GREEN}sudo sec-chek${NC}"
 
 # Run the security checker immediately
 echo -e "${GREEN}=== Running security check now... ===${NC}"
 echo -e "${BLUE}This may take a few minutes...${NC}"
 
 # Check if the security checker exists before running it
-if [ ! -f "$INSTALL_DIR/src/security_checker.py" ]; then
-    echo -e "${RED}Error: security_checker.py not found at $INSTALL_DIR/src/security_checker.py${NC}"
+if [ ! -f "$INSTALL_DIR/sec-chek.py" ]; then
+    echo -e "${RED}Error: sec-chek.py not found at $INSTALL_DIR/sec-chek.py${NC}"
     echo -e "${YELLOW}Skipping initial security check.${NC}"
-    echo -e "You can run the security checker manually by typing: ${GREEN}sudo security-checker${NC}"
+    echo -e "You can run the security checker manually by typing: ${GREEN}sudo sec-chek${NC}"
 else
     # Run the security checker in the background and show progress
-    python3 "$INSTALL_DIR/src/security_checker.py" &
+    python3 "$INSTALL_DIR/sec-chek.py" &
     SECURITY_CHECK_PID=$!
     show_progress $SECURITY_CHECK_PID "Running security check..."
 
@@ -469,4 +467,4 @@ else
     echo -e "Check the generated report for detailed results."
 fi
 
-echo -e "To run the interactive menu, type: ${GREEN}sudo security-checker${NC}"
+echo -e "To run the interactive menu, type: ${GREEN}sudo sec-chek${NC}"
