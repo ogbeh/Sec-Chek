@@ -130,12 +130,79 @@ download_security_checker() {
     local temp_dir=$(mktemp -d)
     echo -e "${BLUE}Downloading security checker...${NC}"
     
-    # Download the repository
-    git clone https://github.com/ogbeh/Sec-Chek.git "$temp_dir" || {
-        echo -e "${RED}Failed to download security checker.${NC}"
-        rm -rf "$temp_dir"
-        exit 1
-    }
+    # Check if git is installed
+    if command -v git &> /dev/null; then
+        # Download the repository using git
+        git clone https://github.com/ogbeh/Sec-Chek.git "$temp_dir" || {
+            echo -e "${RED}Failed to download security checker using git.${NC}"
+            rm -rf "$temp_dir"
+            exit 1
+        }
+    else
+        echo -e "${YELLOW}Git is not installed. Using alternative download method...${NC}"
+        
+        # Check if curl is installed
+        if command -v curl &> /dev/null; then
+            echo -e "${BLUE}Downloading using curl...${NC}"
+            # Download the repository as a zip file
+            curl -L https://github.com/ogbeh/Sec-Chek/archive/master.zip -o "$temp_dir/sec-chek.zip" || {
+                echo -e "${RED}Failed to download security checker using curl.${NC}"
+                rm -rf "$temp_dir"
+                exit 1
+            }
+            
+            # Check if unzip is installed
+            if command -v unzip &> /dev/null; then
+                echo -e "${BLUE}Extracting files...${NC}"
+                unzip -q "$temp_dir/sec-chek.zip" -d "$temp_dir" || {
+                    echo -e "${RED}Failed to extract the downloaded file.${NC}"
+                    rm -rf "$temp_dir"
+                    exit 1
+                }
+                # Move files from the extracted directory to temp_dir
+                mv "$temp_dir/Sec-Chek-master"/* "$temp_dir/"
+                rm -rf "$temp_dir/Sec-Chek-master"
+            else
+                echo -e "${RED}unzip is not installed. Please install unzip or git to continue.${NC}"
+                rm -rf "$temp_dir"
+                exit 1
+            fi
+        # Check if wget is installed
+        elif command -v wget &> /dev/null; then
+            echo -e "${BLUE}Downloading using wget...${NC}"
+            # Download the repository as a zip file
+            wget -q https://github.com/ogbeh/Sec-Chek/archive/master.zip -O "$temp_dir/sec-chek.zip" || {
+                echo -e "${RED}Failed to download security checker using wget.${NC}"
+                rm -rf "$temp_dir"
+                exit 1
+            }
+            
+            # Check if unzip is installed
+            if command -v unzip &> /dev/null; then
+                echo -e "${BLUE}Extracting files...${NC}"
+                unzip -q "$temp_dir/sec-chek.zip" -d "$temp_dir" || {
+                    echo -e "${RED}Failed to extract the downloaded file.${NC}"
+                    rm -rf "$temp_dir"
+                    exit 1
+                }
+                # Move files from the extracted directory to temp_dir
+                mv "$temp_dir/Sec-Chek-master"/* "$temp_dir/"
+                rm -rf "$temp_dir/Sec-Chek-master"
+            else
+                echo -e "${RED}unzip is not installed. Please install unzip or git to continue.${NC}"
+                rm -rf "$temp_dir"
+                exit 1
+            fi
+        else
+            echo -e "${RED}Neither git, curl, nor wget is installed. Please install one of them to continue.${NC}"
+            echo -e "${YELLOW}You can install them using:${NC}"
+            echo -e "  - For Debian/Ubuntu: apt-get install git (or curl/wget)"
+            echo -e "  - For CentOS/RHEL: yum install git (or curl/wget)"
+            echo -e "  - For Arch Linux: pacman -S git (or curl/wget)"
+            rm -rf "$temp_dir"
+            exit 1
+        fi
+    fi
     
     # Check if the download was successful
     if [ ! -f "$temp_dir/src/security_checker.py" ]; then
