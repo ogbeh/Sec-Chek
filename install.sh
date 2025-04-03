@@ -131,44 +131,25 @@ download_security_checker() {
     
     # Check if git is installed
     if command -v git &> /dev/null; then
-        # Download the repository using git
-        git clone https://github.com/ogbeh/Sec-Chek.git "$temp_dir/sec-chek" || {
+        echo -e "${BLUE}Downloading using git...${NC}" >&2
+        # Download the repository using git (using the main branch explicitly)
+        git clone -b main https://github.com/ogbeh/Sec-Chek.git "$temp_dir/sec-chek" || {
             echo -e "${RED}Failed to download security checker using git.${NC}" >&2
             rm -rf "$temp_dir"
             return 1
         }
-        # Move files from cloned directory to temp directory
-        mv "$temp_dir/sec-chek"/* "$temp_dir/"
-        rm -rf "$temp_dir/sec-chek"
     else
         echo -e "${YELLOW}Git is not installed. Using alternative download method...${NC}" >&2
         
         # Check if curl is installed
         if command -v curl &> /dev/null; then
             echo -e "${BLUE}Downloading using curl...${NC}" >&2
-            curl -L https://github.com/ogbeh/Sec-Chek/archive/main.zip -o "$temp_dir/sec-chek.zip" || {
+            # Use the raw file URL directly from GitHub
+            curl -L "https://raw.githubusercontent.com/ogbeh/Sec-Chek/main/sec-chek.py" -o "$temp_dir/sec-chek.py" || {
                 echo -e "${RED}Failed to download security checker using curl.${NC}" >&2
                 rm -rf "$temp_dir"
                 return 1
             }
-            
-            # Check if unzip is installed
-            if command -v unzip &> /dev/null; then
-                echo -e "${BLUE}Extracting files...${NC}" >&2
-                unzip -q "$temp_dir/sec-chek.zip" -d "$temp_dir" || {
-                    echo -e "${RED}Failed to extract the downloaded file.${NC}" >&2
-                    rm -rf "$temp_dir"
-                    return 1
-                }
-                # Move files from the extracted directory to temp_dir
-                mv "$temp_dir/Sec-Chek-main"/* "$temp_dir/"
-                rm -rf "$temp_dir/Sec-Chek-main"
-                rm -f "$temp_dir/sec-chek.zip"
-            else
-                echo -e "${RED}unzip is not installed. Please install unzip or git to continue.${NC}" >&2
-                rm -rf "$temp_dir"
-                return 1
-            fi
         else
             echo -e "${RED}Neither git nor curl is installed. Please install one of them to continue.${NC}" >&2
             rm -rf "$temp_dir"
@@ -182,9 +163,17 @@ download_security_checker() {
     
     # Check if the download was successful
     if [ ! -f "$temp_dir/sec-chek.py" ]; then
-        echo -e "${RED}Downloaded repository does not contain sec-chek.py${NC}" >&2
-        rm -rf "$temp_dir"
-        return 1
+        if [ -f "$temp_dir/sec-chek/sec-chek.py" ]; then
+            # If the file exists in the git-cloned directory, move it up
+            mv "$temp_dir/sec-chek/sec-chek.py" "$temp_dir/"
+            rm -rf "$temp_dir/sec-chek"
+        else
+            echo -e "${RED}Downloaded repository does not contain sec-chek.py${NC}" >&2
+            echo -e "${YELLOW}Checking repository structure...${NC}" >&2
+            find "$temp_dir" -type f -name "sec-chek.py" >&2
+            rm -rf "$temp_dir"
+            return 1
+        fi
     fi
     
     echo -e "${GREEN}Download successful!${NC}" >&2
