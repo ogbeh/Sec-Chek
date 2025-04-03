@@ -1,139 +1,80 @@
-# Sec-Chek
+# sec-chek - Linux Network Security Check Tool
 
-A simple and efficient network security assessment tool for Linux systems that provides quick insights into your system's security status.
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-## Supported Distributions
-
-### Debian Family
-- Ubuntu
-- Debian
-- Linux Mint
-- Other Debian-based distributions
-
-### Red Hat Family
-- CentOS
-- RHEL (Red Hat Enterprise Linux)
-- Fedora
-- Other RHEL-based distributions
-
-### Other Distributions
-- Arch Linux
-- openSUSE
-- SUSE Linux Enterprise
+A comprehensive Linux network security checking tool that provides a one-click installation and easy-to-use menu interface for performing various security checks on your Linux system.
 
 ## Features
 
-- Distribution-specific firewall status check:
-  - UFW for Debian/Ubuntu family
-  - firewalld for RHEL family
-  - iptables for Arch Linux
-  - SuSEfirewall2 for SUSE
-- Common port scanning
-- System information gathering
-- HTML report generation
-- Automatic distribution detection
-- Distribution-specific package management
+- One-click installation
+- Interactive menu interface
+- Checks for:
+  - Firewall status
+  - Open ports
+  - System security
+  - Network scanning
+- Color-coded output
+- Uninstall option
+- Works on common Linux distributions (Ubuntu, Debian, CentOS, RHEL)
 
 ## Installation
 
-### Quick Install (One-Liner)
-```bash
-curl -s https://raw.githubusercontent.com/ogbeh/Sec-Chek/master/install.sh | bash
-```
+### One-Click Installation
 
-### Alternative Quick Install
 ```bash
-wget -qO- https://raw.githubusercontent.com/ogbeh/Sec-Chek/master/install.sh | bash
+wget -qO- https://raw.githubusercontent.com/yourusername/sec-chek/main/install.sh | sudo bash
 ```
 
 ### Manual Installation
 
-1. Clone the repository:
+1. Download the script:
 ```bash
-git clone https://github.com/ogbeh/Sec-Chek.git
-cd Sec-Chek
+wget https://raw.githubusercontent.com/yourusername/sec-chek/main/sec-chek.sh
 ```
 
-2. Make the script executable:
+2. Make it executable:
 ```bash
-chmod +x install.sh
+chmod +x sec-chek.sh
 ```
 
-3. Run the installer:
+3. Move to system directory:
 ```bash
-./install.sh
+sudo mv sec-chek.sh /usr/local/bin/sec-chek
 ```
-
-### Direct Download
-You can also download the installation script directly:
-```bash
-wget https://raw.githubusercontent.com/ogbeh/Sec-Chek/master/install.sh
-chmod +x install.sh
-./install.sh
-```
-
-## Requirements
-
-- Python 3.6 or higher (will be installed automatically if missing)
-- sudo privileges (for firewall checks)
-- Internet connection (for initial installation)
-
-## Output
-
-The script generates an HTML report (`security_report.html`) containing:
-- System information (distribution, version, architecture)
-- Firewall status (distribution-specific)
-- Open ports
-- Security recommendations
 
 ## Usage
 
-After installation, simply run:
+Run the script with sudo privileges:
 ```bash
-security-checker
+sudo sec-chek
 ```
 
-The report will be generated in your current directory.
+The script will present an interactive menu with the following options:
+1. Check Firewall Status
+2. Check Open Ports
+3. Check System Security
+4. Perform Network Scan
+5. Uninstall sec-chek
+6. Exit
 
-## Distribution-Specific Notes
+## Requirements
 
-### Debian/Ubuntu Family
-- Uses UFW (Uncomplicated Firewall)
-- Automatically installs UFW if missing
+- Root privileges (sudo)
+- Supported Linux distributions:
+  - Ubuntu
+  - Debian
+  - CentOS
+  - Red Hat Enterprise Linux
 
-### RHEL Family
-- Uses firewalld
-- Automatically installs firewalld if missing
+## Uninstallation
 
-### Arch Linux
-- Uses iptables
-- Automatically installs iptables if missing
+You can uninstall sec-chek either through the menu option (5) or by running:
+```bash
+sudo rm /usr/local/bin/sec-chek
+```
 
-### SUSE Family
-- Uses SuSEfirewall2
-- Automatically installs SuSEfirewall2 if missing
+## Security Note
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+This script requires root privileges to perform system checks. Always review the source code before running scripts with elevated privileges.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Author
-
-- **Ogbeh** - [GitHub](https://github.com/ogbeh)
-
-## Acknowledgments
-
-- Thanks to all contributors who have helped improve this tool
-- Inspired by the need for quick security assessments on Linux systems
+MIT License 

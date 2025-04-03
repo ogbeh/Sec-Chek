@@ -1,2 +1,0 @@
-# No external dependencies required for basic functionality
-# This file is included for future extensibility 
