@@ -263,7 +263,7 @@ def run_check(check_type):
     
     # Show a simple progress indicator
     while process.poll() is None:
-        for char in "|/-\\":
+        for char in "|/-\\\\":
             sys.stdout.write(f"\rRunning {check_type}... {char}")
             sys.stdout.flush()
             time.sleep(0.1)
