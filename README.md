@@ -22,15 +22,15 @@ A powerful Bash script for managing ports and checking firewall status on Linux 
 ### Method 1: Direct Installation
 
 ```bash
-curl -s https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/install.sh | sudo bash
+curl -s https://raw.githubusercontent.com/ogbeh/sec-chek/main/install.sh | sudo bash
 ```
 
 ### Method 2: Manual Installation
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
-cd YOUR_REPO
+git clone https://github.com/ogbeh/sec-chek.git
+cd sec-chek
 ```
 
 2. Make the script executable:
