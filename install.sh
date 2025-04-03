@@ -16,6 +16,7 @@ fi
 
 # Get the directory where the script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+echo -e "${BLUE}Script directory: $SCRIPT_DIR${NC}"
 
 # Function to show progress
 show_progress() {
@@ -150,9 +151,15 @@ mkdir -p "$INSTALL_DIR"
 
 # Check if source file exists
 SOURCE_FILE="$SCRIPT_DIR/src/security_checker.py"
+echo -e "${BLUE}Looking for source file at: $SOURCE_FILE${NC}"
+
 if [ ! -f "$SOURCE_FILE" ]; then
-    echo -e "${RED}Error: Could not find security_checker.py in $SOURCE_FILE${NC}"
+    echo -e "${RED}Error: Could not find security_checker.py${NC}"
+    echo -e "${YELLOW}Current directory: $SCRIPT_DIR${NC}"
     echo -e "${YELLOW}Please make sure you're running the install script from the project root directory${NC}"
+    echo -e "${YELLOW}Expected file location: $SOURCE_FILE${NC}"
+    echo -e "${YELLOW}Directory contents:${NC}"
+    ls -la "$SCRIPT_DIR"
     exit 1
 fi
 
@@ -160,6 +167,106 @@ fi
 echo -e "${BLUE}Copying security checker script...${NC}"
 cp "$SOURCE_FILE" "$INSTALL_DIR/"
 chmod +x "$INSTALL_DIR/security_checker.py"
+
+# Create menu script
+echo -e "${BLUE}Creating menu script...${NC}"
+cat > "$INSTALL_DIR/menu.py" << EOL
+#!/usr/bin/env python3
+import os
+import sys
+import subprocess
+import time
+
+def clear_screen():
+    os.system('clear' if os.name == 'posix' else 'cls')
+
+def print_header():
+    clear_screen()
+    print("=" * 60)
+    print("           SECURITY CHECKER MENU")
+    print("=" * 60)
+    print()
+
+def print_menu():
+    print_header()
+    print("1. Full Security Check")
+    print("2. Check Firewall Status")
+    print("3. Check Open Ports")
+    print("4. Check System Information")
+    print("5. Check User Accounts")
+    print("6. Check Installed Packages")
+    print("7. Check Network Configuration")
+    print("8. Exit")
+    print()
+    print("=" * 60)
+    print()
+
+def run_check(check_type):
+    print_header()
+    print(f"Running {check_type}...")
+    print("=" * 60)
+    print()
+    
+    # Run the security checker with the appropriate option
+    cmd = ["python3", "/opt/sec-chek/security_checker.py", check_type]
+    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    
+    # Show a simple progress indicator
+    while process.poll() is None:
+        for char in "|/-\\":
+            sys.stdout.write(f"\rRunning {check_type}... {char}")
+            sys.stdout.flush()
+            time.sleep(0.1)
+    
+    # Get the output
+    stdout, stderr = process.communicate()
+    
+    # Clear the progress indicator
+    sys.stdout.write("\r" + " " * 50 + "\r")
+    
+    # Print the output
+    if stdout:
+        print(stdout.decode('utf-8'))
+    if stderr:
+        print(stderr.decode('utf-8'))
+    
+    print()
+    print("=" * 60)
+    input("Press Enter to continue...")
+
+def main():
+    while True:
+        print_menu()
+        choice = input("Enter your choice (1-8): ")
+        
+        if choice == '1':
+            run_check("full")
+        elif choice == '2':
+            run_check("firewall")
+        elif choice == '3':
+            run_check("ports")
+        elif choice == '4':
+            run_check("system")
+        elif choice == '5':
+            run_check("users")
+        elif choice == '6':
+            run_check("packages")
+        elif choice == '7':
+            run_check("network")
+        elif choice == '8':
+            print_header()
+            print("Exiting Security Checker. Goodbye!")
+            print("=" * 60)
+            sys.exit(0)
+        else:
+            print("Invalid choice. Please try again.")
+            time.sleep(1)
+
+if __name__ == "__main__":
+    main()
+EOL
+
+chmod +x "$INSTALL_DIR/menu.py"
 
 # Create wrapper script
 echo -e "${BLUE}Creating wrapper script...${NC}"
@@ -170,7 +277,15 @@ if [ "\$EUID" -ne 0 ]; then
     echo -e "${YELLOW}Please run with sudo: sudo security-checker${NC}"
     exit 1
 fi
-python3 "$INSTALL_DIR/security_checker.py" "\$@"
+
+# Check if an argument was provided
+if [ \$# -eq 0 ]; then
+    # No arguments, run the menu
+    python3 "$INSTALL_DIR/menu.py"
+else
+    # Arguments provided, run the security checker with those arguments
+    python3 "$INSTALL_DIR/security_checker.py" "\$@"
+fi
 EOL
 
 chmod +x "$BIN_DIR/security-checker"
@@ -195,3 +310,4 @@ wait $SECURITY_CHECK_PID
 
 echo -e "${GREEN}=== Security check complete! ===${NC}"
 echo -e "Check the generated report for detailed results."
+echo -e "To run the interactive menu, type: ${GREEN}sudo security-checker${NC}"
