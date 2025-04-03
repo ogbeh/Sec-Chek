@@ -213,10 +213,27 @@ mkdir -p "$INSTALL_DIR"
 TEMP_DIR=$(download_security_checker)
 SOURCE_FILE="$TEMP_DIR/src/security_checker.py"
 
+# Check if the source file exists
+if [ ! -f "$SOURCE_FILE" ]; then
+    echo -e "${RED}Error: Could not find security_checker.py in the downloaded repository${NC}"
+    echo -e "${YELLOW}Expected file location: $SOURCE_FILE${NC}"
+    echo -e "${YELLOW}Directory contents:${NC}"
+    ls -la "$TEMP_DIR"
+    rm -rf "$TEMP_DIR"
+    exit 1
+fi
+
 # Copy the script
 echo -e "${BLUE}Copying security checker script...${NC}"
 cp "$SOURCE_FILE" "$INSTALL_DIR/"
 chmod +x "$INSTALL_DIR/security_checker.py"
+
+# Verify the file was copied successfully
+if [ ! -f "$INSTALL_DIR/security_checker.py" ]; then
+    echo -e "${RED}Error: Failed to copy security_checker.py to $INSTALL_DIR${NC}"
+    rm -rf "$TEMP_DIR"
+    exit 1
+fi
 
 # Create menu script
 echo -e "${BLUE}Creating menu script...${NC}"
@@ -354,14 +371,22 @@ echo -e "You can now run the security checker by typing: ${GREEN}sudo security-c
 echo -e "${GREEN}=== Running security check now... ===${NC}"
 echo -e "${BLUE}This may take a few minutes...${NC}"
 
-# Run the security checker in the background and show progress
-python3 "$INSTALL_DIR/security_checker.py" &
-SECURITY_CHECK_PID=$!
-show_progress $SECURITY_CHECK_PID "Running security check..."
+# Check if the security checker exists before running it
+if [ ! -f "$INSTALL_DIR/security_checker.py" ]; then
+    echo -e "${RED}Error: security_checker.py not found at $INSTALL_DIR/security_checker.py${NC}"
+    echo -e "${YELLOW}Skipping initial security check.${NC}"
+    echo -e "You can run the security checker manually by typing: ${GREEN}sudo security-checker${NC}"
+else
+    # Run the security checker in the background and show progress
+    python3 "$INSTALL_DIR/security_checker.py" &
+    SECURITY_CHECK_PID=$!
+    show_progress $SECURITY_CHECK_PID "Running security check..."
 
-# Wait for the security check to complete
-wait $SECURITY_CHECK_PID
+    # Wait for the security check to complete
+    wait $SECURITY_CHECK_PID
 
-echo -e "${GREEN}=== Security check complete! ===${NC}"
-echo -e "Check the generated report for detailed results."
+    echo -e "${GREEN}=== Security check complete! ===${NC}"
+    echo -e "Check the generated report for detailed results."
+fi
+
 echo -e "To run the interactive menu, type: ${GREEN}sudo security-checker${NC}"
