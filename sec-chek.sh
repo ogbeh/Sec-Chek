@@ -4,6 +4,9 @@
 # Author: Claude
 # Version: 1.0
 
+# Enable debug mode
+set -x
+
 # Color definitions
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -17,13 +20,16 @@ check_root() {
         echo -e "${RED}Please run as root (use sudo)${NC}"
         exit 1
     fi
+    echo -e "${GREEN}Running with root privileges${NC}"
 }
 
 # Function to check OS compatibility
 check_os() {
+    echo -e "${BLUE}Detecting operating system...${NC}"
     if [ -f /etc/os-release ]; then
         . /etc/os-release
         OS=$NAME
+        echo -e "${GREEN}Detected OS: $OS${NC}"
     else
         echo -e "${RED}Could not detect OS${NC}"
         exit 1
@@ -35,18 +41,27 @@ install_dependencies() {
     echo -e "${BLUE}Installing required dependencies...${NC}"
     case $OS in
         "Ubuntu"|"Debian GNU/Linux")
-            apt-get update
-            apt-get install -y net-tools nmap ufw iptables
+            if ! command -v apt-get &> /dev/null; then
+                echo -e "${RED}apt-get not found. Are you sure this is a Debian-based system?${NC}"
+                exit 1
+            fi
+            apt-get update || { echo -e "${RED}Failed to update package list${NC}"; exit 1; }
+            apt-get install -y net-tools nmap ufw iptables || { echo -e "${RED}Failed to install dependencies${NC}"; exit 1; }
             ;;
         "CentOS Linux"|"Red Hat Enterprise Linux")
-            yum update -y
-            yum install -y net-tools nmap firewalld iptables-services
+            if ! command -v yum &> /dev/null; then
+                echo -e "${RED}yum not found. Are you sure this is a Red Hat-based system?${NC}"
+                exit 1
+            fi
+            yum update -y || { echo -e "${RED}Failed to update package list${NC}"; exit 1; }
+            yum install -y net-tools nmap firewalld iptables-services || { echo -e "${RED}Failed to install dependencies${NC}"; exit 1; }
             ;;
         *)
             echo -e "${RED}Unsupported OS: $OS${NC}"
             exit 1
             ;;
     esac
+    echo -e "${GREEN}Dependencies installed successfully${NC}"
 }
 
 # Function to check firewall status
@@ -54,10 +69,18 @@ check_firewall() {
     echo -e "\n${BLUE}=== Firewall Status ===${NC}"
     case $OS in
         "Ubuntu"|"Debian GNU/Linux")
-            ufw status | cat
+            if command -v ufw &> /dev/null; then
+                ufw status | cat
+            else
+                echo -e "${RED}UFW not found${NC}"
+            fi
             ;;
         "CentOS Linux"|"Red Hat Enterprise Linux")
-            systemctl status firewalld | cat
+            if command -v firewalld &> /dev/null; then
+                systemctl status firewalld | cat
+            else
+                echo -e "${RED}Firewalld not found${NC}"
+            fi
             ;;
     esac
 }
@@ -65,7 +88,11 @@ check_firewall() {
 # Function to check open ports
 check_open_ports() {
     echo -e "\n${BLUE}=== Open Ports ===${NC}"
-    netstat -tuln | cat
+    if command -v netstat &> /dev/null; then
+        netstat -tuln | cat
+    else
+        echo -e "${RED}netstat not found${NC}"
+    fi
 }
 
 # Function to check system security
@@ -74,22 +101,42 @@ check_system_security() {
     
     # Check for failed login attempts
     echo -e "\n${YELLOW}Recent Failed Login Attempts:${NC}"
-    grep "Failed password" /var/log/auth.log 2>/dev/null || grep "Failed password" /var/log/secure 2>/dev/null
+    if [ -f /var/log/auth.log ]; then
+        grep "Failed password" /var/log/auth.log 2>/dev/null
+    elif [ -f /var/log/secure ]; then
+        grep "Failed password" /var/log/secure 2>/dev/null
+    else
+        echo -e "${RED}Could not find auth logs${NC}"
+    fi
     
     # Check for root login attempts
     echo -e "\n${YELLOW}Root Login Attempts:${NC}"
-    grep "root" /var/log/auth.log 2>/dev/null || grep "root" /var/log/secure 2>/dev/null
+    if [ -f /var/log/auth.log ]; then
+        grep "root" /var/log/auth.log 2>/dev/null
+    elif [ -f /var/log/secure ]; then
+        grep "root" /var/log/secure 2>/dev/null
+    else
+        echo -e "${RED}Could not find auth logs${NC}"
+    fi
     
     # Check for running services
     echo -e "\n${YELLOW}Running Services:${NC}"
-    systemctl list-units --type=service --state=running | cat
+    if command -v systemctl &> /dev/null; then
+        systemctl list-units --type=service --state=running | cat
+    else
+        echo -e "${RED}systemctl not found${NC}"
+    fi
 }
 
 # Function to perform network scan
 perform_network_scan() {
     echo -e "\n${BLUE}=== Network Scan ===${NC}"
-    echo -e "${YELLOW}Scanning local network...${NC}"
-    nmap -sn $(ip route | grep default | cut -d ' ' -f 3)/24
+    if command -v nmap &> /dev/null; then
+        echo -e "${YELLOW}Scanning local network...${NC}"
+        nmap -sn $(ip route | grep default | cut -d ' ' -f 3)/24
+    else
+        echo -e "${RED}nmap not found${NC}"
+    fi
 }
 
 # Function to uninstall the script
@@ -127,6 +174,7 @@ show_menu() {
 
 # Main execution
 main() {
+    echo -e "${BLUE}Starting sec-chek...${NC}"
     check_root
     check_os
     install_dependencies
