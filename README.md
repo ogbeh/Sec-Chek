@@ -20,14 +20,14 @@ A comprehensive Linux network security checking tool that provides a one-click i
 ### One-Click Installation
 
 ```bash
-wget -qO- https://raw.githubusercontent.com/yourusername/sec-chek/main/install.sh | sudo bash
+wget -qO- https://raw.githubusercontent.com/ogbeh/sec-chek/main/install.sh | sudo bash
 ```
 
 ### Manual Installation
 
 1. Download the script:
 ```bash
-wget https://raw.githubusercontent.com/yourusername/sec-chek/main/sec-chek.sh
+wget https://raw.githubusercontent.com/ogbeh/sec-chek/main/sec-chek.sh
 ```
 
 2. Make it executable:
