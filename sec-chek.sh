@@ -67,64 +67,64 @@ uninstall() {
     exit 0
 }
 
-# Main menu loop
+# Main menu
 while true; do
     show_banner
     echo "Please select an option:"
-    echo "1. Check Firewall Status"
-    echo "2. Check Open Ports"
-    echo "3. Check System Updates"
-    echo "4. Run All Checks"
-    echo "5. Uninstall SEC-CHEK"
-    echo "0. Exit"
     echo
-    printf "Enter your choice (0-5): "
-    read choice
+    echo "1) Check Firewall Status"
+    echo "2) Check Open Ports"
+    echo "3) Check System Updates"
+    echo "4) Run All Checks"
+    echo "5) Uninstall SEC-CHEK"
+    echo "0) Exit"
+    echo
+    echo -n "Enter choice [0-5]: "
+    read -n 1 choice
+    echo
 
-    case $choice in
-        1)
-            clear
+    case "$choice" in
+        0)  echo -e "${GREEN}Exiting SEC-CHEK. Goodbye!${NC}"
+            exit 0
+            ;;
+        1)  clear
             check_firewall
             echo
-            read -p "Press Enter to continue..."
+            echo -n "Press any key to continue..."
+            read -n 1
             ;;
-        2)
-            clear
+        2)  clear
             check_ports
             echo
-            read -p "Press Enter to continue..."
+            echo -n "Press any key to continue..."
+            read -n 1
             ;;
-        3)
-            clear
+        3)  clear
             check_updates
             echo
-            read -p "Press Enter to continue..."
+            echo -n "Press any key to continue..."
+            read -n 1
             ;;
-        4)
-            clear
+        4)  clear
             check_firewall
+            echo
             check_ports
+            echo
             check_updates
             echo
-            read -p "Press Enter to continue..."
+            echo -n "Press any key to continue..."
+            read -n 1
             ;;
-        5)
-            clear
-            echo -e "${YELLOW}Are you sure you want to uninstall? (y/n): ${NC}"
-            read confirm
-            if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
+        5)  clear
+            echo -e "${YELLOW}Are you sure you want to uninstall SEC-CHEK? [y/N]: ${NC}"
+            read -n 1 confirm
+            echo
+            if [[ $confirm =~ ^[Yy]$ ]]; then
                 uninstall
             fi
             ;;
-        0)
-            clear
-            echo -e "${GREEN}Exiting SEC-CHEK. Goodbye!${NC}"
-            exit 0
-            ;;
-        *)
-            clear
-            echo -e "${RED}Invalid option. Please try again.${NC}"
-            sleep 2
+        *)  echo -e "${RED}Invalid option. Press any key to continue...${NC}"
+            read -n 1
             ;;
     esac
 done 
