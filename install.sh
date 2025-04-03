@@ -128,6 +128,10 @@ check_firewall() {
 # Function to download the security checker
 download_security_checker() {
     local temp_dir=$(mktemp -d)
+    
+    # Store the temp_dir in a file to avoid mixing with debug output
+    echo "$temp_dir" > "$temp_dir/path"
+    
     echo -e "${BLUE}Downloading security checker...${NC}"
     
     # Check if git is installed
@@ -235,8 +239,8 @@ download_security_checker() {
     fi
     
     echo -e "${GREEN}Download successful!${NC}"
-    # Return only the directory path, not any debug output
-    echo "$temp_dir"
+    # Return only the directory path by reading from the temporary file
+    cat "$temp_dir/path"
 }
 
 # Function to check if security checker is already installed
@@ -302,7 +306,7 @@ mkdir -p "$INSTALL_DIR"
 
 # Download the security checker
 echo -e "${BLUE}Downloading security checker...${NC}"
-TEMP_DIR=$(download_security_checker)
+TEMP_DIR=$(download_security_checker | tail -n 1)
 echo -e "${BLUE}Using temporary directory: $TEMP_DIR${NC}"
 
 # Check if the source file exists
