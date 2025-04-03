@@ -129,120 +129,65 @@ check_firewall() {
 download_security_checker() {
     local temp_dir=$(mktemp -d)
     
-    # Create a subdirectory for the git clone
-    local clone_dir="$temp_dir/sec-chek"
-    mkdir -p "$clone_dir"
-    
     # Check if git is installed
     if command -v git &> /dev/null; then
-        # Download the repository using git into the subdirectory
-        git clone https://github.com/ogbeh/Sec-Chek.git "$clone_dir" 2>/dev/null || {
+        # Download the repository using git
+        git clone https://github.com/ogbeh/Sec-Chek.git "$temp_dir/sec-chek" || {
             echo -e "${RED}Failed to download security checker using git.${NC}" >&2
             rm -rf "$temp_dir"
             return 1
         }
-        
-        # Move files from clone directory to temp directory
-        mv "$clone_dir"/* "$temp_dir/"
-        rm -rf "$clone_dir"
+        # Move files from cloned directory to temp directory
+        mv "$temp_dir/sec-chek"/* "$temp_dir/"
+        rm -rf "$temp_dir/sec-chek"
     else
-        echo -e "${YELLOW}Git is not installed. Using alternative download method...${NC}"
+        echo -e "${YELLOW}Git is not installed. Using alternative download method...${NC}" >&2
         
         # Check if curl is installed
         if command -v curl &> /dev/null; then
-            echo -e "${BLUE}Downloading using curl...${NC}"
-            # Download the repository as a zip file
-            curl -L https://github.com/ogbeh/Sec-Chek/archive/master.zip -o "$temp_dir/sec-chek.zip" || {
-                echo -e "${RED}Failed to download security checker using curl.${NC}"
+            echo -e "${BLUE}Downloading using curl...${NC}" >&2
+            curl -L https://github.com/ogbeh/Sec-Chek/archive/main.zip -o "$temp_dir/sec-chek.zip" || {
+                echo -e "${RED}Failed to download security checker using curl.${NC}" >&2
                 rm -rf "$temp_dir"
                 return 1
             }
             
             # Check if unzip is installed
             if command -v unzip &> /dev/null; then
-                echo -e "${BLUE}Extracting files...${NC}"
+                echo -e "${BLUE}Extracting files...${NC}" >&2
                 unzip -q "$temp_dir/sec-chek.zip" -d "$temp_dir" || {
-                    echo -e "${RED}Failed to extract the downloaded file.${NC}"
+                    echo -e "${RED}Failed to extract the downloaded file.${NC}" >&2
                     rm -rf "$temp_dir"
                     return 1
                 }
                 # Move files from the extracted directory to temp_dir
-                mv "$temp_dir/Sec-Chek-master"/* "$temp_dir/"
-                rm -rf "$temp_dir/Sec-Chek-master"
+                mv "$temp_dir/Sec-Chek-main"/* "$temp_dir/"
+                rm -rf "$temp_dir/Sec-Chek-main"
+                rm -f "$temp_dir/sec-chek.zip"
             else
-                echo -e "${RED}unzip is not installed. Please install unzip or git to continue.${NC}"
-                rm -rf "$temp_dir"
-                return 1
-            fi
-        # Check if wget is installed
-        elif command -v wget &> /dev/null; then
-            echo -e "${BLUE}Downloading using wget...${NC}"
-            # Download the repository as a zip file
-            wget -q https://github.com/ogbeh/Sec-Chek/archive/master.zip -O "$temp_dir/sec-chek.zip" || {
-                echo -e "${RED}Failed to download security checker using wget.${NC}"
-                rm -rf "$temp_dir"
-                return 1
-            }
-            
-            # Check if unzip is installed
-            if command -v unzip &> /dev/null; then
-                echo -e "${BLUE}Extracting files...${NC}"
-                unzip -q "$temp_dir/sec-chek.zip" -d "$temp_dir" || {
-                    echo -e "${RED}Failed to extract the downloaded file.${NC}"
-                    rm -rf "$temp_dir"
-                    return 1
-                }
-                # Move files from the extracted directory to temp_dir
-                mv "$temp_dir/Sec-Chek-master"/* "$temp_dir/"
-                rm -rf "$temp_dir/Sec-Chek-master"
-            else
-                echo -e "${RED}unzip is not installed. Please install unzip or git to continue.${NC}"
+                echo -e "${RED}unzip is not installed. Please install unzip or git to continue.${NC}" >&2
                 rm -rf "$temp_dir"
                 return 1
             fi
         else
-            echo -e "${RED}Neither git, curl, nor wget is installed. Please install one of them to continue.${NC}"
-            echo -e "${YELLOW}You can install them using:${NC}"
-            echo -e "  - For Debian/Ubuntu: apt-get install git (or curl/wget)"
-            echo -e "  - For CentOS/RHEL: yum install git (or curl/wget)"
-            echo -e "  - For Arch Linux: pacman -S git (or curl/wget)"
+            echo -e "${RED}Neither git nor curl is installed. Please install one of them to continue.${NC}" >&2
             rm -rf "$temp_dir"
             return 1
         fi
     fi
     
-    # Debug output to stderr so it doesn't mix with the return value
+    # Debug output to stderr
     echo -e "${BLUE}Contents of downloaded repository:${NC}" >&2
     ls -la "$temp_dir" >&2
     
     # Check if the download was successful
     if [ ! -f "$temp_dir/sec-chek.py" ]; then
         echo -e "${RED}Downloaded repository does not contain sec-chek.py${NC}" >&2
-        echo -e "${YELLOW}Checking for alternative locations...${NC}"
-        
-        # Try to find the file in the repository
-        if [ -f "$temp_dir/security_checker.py" ]; then
-            echo -e "${GREEN}Found security_checker.py, renaming to sec-chek.py${NC}"
-            # Rename the file
-            mv "$temp_dir/security_checker.py" "$temp_dir/sec-chek.py"
-        elif [ -f "$temp_dir/sec-chek/sec-chek.py" ]; then
-            echo -e "${GREEN}Found sec-chek.py in sec-chek directory${NC}"
-            # Copy the file to the root of temp_dir
-            cp "$temp_dir/sec-chek/sec-chek.py" "$temp_dir/"
-        elif [ -f "$temp_dir/src/security_checker.py" ]; then
-            echo -e "${GREEN}Found security_checker.py in src directory, renaming to sec-chek.py${NC}"
-            # Copy and rename the file
-            cp "$temp_dir/src/security_checker.py" "$temp_dir/sec-chek.py"
-        else
-            echo -e "${YELLOW}Directory contents:${NC}"
-            ls -la "$temp_dir"
-            rm -rf "$temp_dir"
-            return 1
-        fi
+        rm -rf "$temp_dir"
+        return 1
     fi
     
     echo -e "${GREEN}Download successful!${NC}" >&2
-    # Return only the directory path
     echo "$temp_dir"
 }
 
