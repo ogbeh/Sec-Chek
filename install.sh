@@ -125,8 +125,68 @@ check_firewall() {
     esac
 }
 
+# Function to download the security checker
+download_security_checker() {
+    local temp_dir=$(mktemp -d)
+    echo -e "${BLUE}Downloading security checker...${NC}"
+    
+    # Download the repository
+    git clone https://github.com/ogbeh/Sec-Chek.git "$temp_dir" || {
+        echo -e "${RED}Failed to download security checker.${NC}"
+        rm -rf "$temp_dir"
+        exit 1
+    }
+    
+    # Check if the download was successful
+    if [ ! -f "$temp_dir/src/security_checker.py" ]; then
+        echo -e "${RED}Downloaded repository does not contain security_checker.py${NC}"
+        rm -rf "$temp_dir"
+        exit 1
+    }
+    
+    echo -e "${GREEN}Download successful!${NC}"
+    echo "$temp_dir"
+}
+
+# Function to check if security checker is already installed
+check_existing_installation() {
+    if [ -f "/opt/sec-chek/security_checker.py" ]; then
+        echo -e "${YELLOW}Security checker is already installed.${NC}"
+        echo -e "1. Update (keep existing configuration)"
+        echo -e "2. Reinstall (remove existing installation)"
+        echo -e "3. Exit"
+        echo
+        read -p "Enter your choice (1-3): " choice
+        
+        case $choice in
+            1)
+                echo -e "${BLUE}Updating security checker...${NC}"
+                return 0
+                ;;
+            2)
+                echo -e "${BLUE}Reinstalling security checker...${NC}"
+                rm -rf /opt/sec-chek
+                return 0
+                ;;
+            3)
+                echo -e "${BLUE}Exiting...${NC}"
+                exit 0
+                ;;
+            *)
+                echo -e "${RED}Invalid choice. Exiting...${NC}"
+                exit 1
+                ;;
+        esac
+    else
+        return 1
+    fi
+}
+
 # Main installation process
 echo -e "${GREEN}=== Installing Network Security Checker ===${NC}"
+
+# Check if already installed
+check_existing_installation
 
 # Detect distribution
 DIST=$(detect_distribution)
@@ -149,19 +209,9 @@ echo -e "${BLUE}Creating installation directories...${NC}"
 mkdir -p "$BIN_DIR"
 mkdir -p "$INSTALL_DIR"
 
-# Check if source file exists
-SOURCE_FILE="$SCRIPT_DIR/src/security_checker.py"
-echo -e "${BLUE}Looking for source file at: $SOURCE_FILE${NC}"
-
-if [ ! -f "$SOURCE_FILE" ]; then
-    echo -e "${RED}Error: Could not find security_checker.py${NC}"
-    echo -e "${YELLOW}Current directory: $SCRIPT_DIR${NC}"
-    echo -e "${YELLOW}Please make sure you're running the install script from the project root directory${NC}"
-    echo -e "${YELLOW}Expected file location: $SOURCE_FILE${NC}"
-    echo -e "${YELLOW}Directory contents:${NC}"
-    ls -la "$SCRIPT_DIR"
-    exit 1
-fi
+# Download the security checker
+TEMP_DIR=$(download_security_checker)
+SOURCE_FILE="$TEMP_DIR/src/security_checker.py"
 
 # Copy the script
 echo -e "${BLUE}Copying security checker script...${NC}"
@@ -289,6 +339,10 @@ fi
 EOL
 
 chmod +x "$BIN_DIR/security-checker"
+
+# Clean up temporary directory
+echo -e "${BLUE}Cleaning up...${NC}"
+rm -rf "$TEMP_DIR"
 
 # Check and install firewall tools
 check_firewall $DIST
