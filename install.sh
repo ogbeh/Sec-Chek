@@ -281,7 +281,7 @@ else
 fi
 
 # Set installation directories (root only)
-INSTALL_DIR="/opt/sec-chek"
+INSTALL_DIR="$SCRIPT_DIR/sec-chek"
 BIN_DIR="/usr/local/bin"
 
 # Create necessary directories
@@ -355,7 +355,7 @@ def run_check(check_type):
     print()
     
     # Run the security checker with the appropriate option
-    cmd = ["python3", "/opt/sec-chek/src/security_checker.py", check_type]
+    cmd = ["python3", "$INSTALL_DIR/src/security_checker.py", check_type]
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     
     # Show a simple progress indicator
