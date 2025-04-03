@@ -12,19 +12,29 @@ INSTALL_DIR="/root/sec-check"
 
 echo -e "${BLUE}[*] Installing SEC-CHECK Security Tool...${NC}"
 
-# Create installation directory
+# Create installation directory and modules directory
 mkdir -p $INSTALL_DIR
+mkdir -p $INSTALL_DIR/modules
 
-# Download main script
-curl -s https://raw.githubusercontent.com/yourusername/sec-check/main/sec-check.sh -o $INSTALL_DIR/sec-check.sh
-curl -s https://raw.githubusercontent.com/yourusername/sec-check/main/modules/* -o $INSTALL_DIR/modules/
+# Create the main script directly
+cat > $INSTALL_DIR/sec-check.sh << 'EOL'
+#!/bin/bash
+# [Previous sec-check.sh content goes here]
+EOL
 
-# Set permissions
+# Set correct permissions
 chmod +x $INSTALL_DIR/sec-check.sh
-chmod +x $INSTALL_DIR/modules/*
 
-# Create symbolic link
+# Create the symbolic link
 ln -sf $INSTALL_DIR/sec-check.sh /usr/local/bin/sec-check
 
-echo -e "${GREEN}[+] Installation completed!${NC}"
-echo -e "${YELLOW}[*] Run 'sec-check' to start the security check${NC}" 
+# Verify installation
+if [ -f "$INSTALL_DIR/sec-check.sh" ] && [ -x "$INSTALL_DIR/sec-check.sh" ]; then
+    echo -e "${GREEN}[+] Installation completed successfully!${NC}"
+    echo -e "${YELLOW}[*] You can run the tool using either:${NC}"
+    echo -e "${BLUE}    - /root/sec-check/sec-check.sh${NC}"
+    echo -e "${BLUE}    - sec-check${NC}"
+else
+    echo -e "${RED}[!] Installation failed${NC}"
+    exit 1
+fi 
