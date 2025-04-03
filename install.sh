@@ -129,19 +129,22 @@ check_firewall() {
 download_security_checker() {
     local temp_dir=$(mktemp -d)
     
-    # Store the temp_dir in a file to avoid mixing with debug output
-    echo "$temp_dir" > "$temp_dir/path"
-    
-    echo -e "${BLUE}Downloading security checker...${NC}"
+    # Create a subdirectory for the git clone
+    local clone_dir="$temp_dir/sec-chek"
+    mkdir -p "$clone_dir"
     
     # Check if git is installed
     if command -v git &> /dev/null; then
-        # Download the repository using git
-        git clone https://github.com/ogbeh/Sec-Chek.git "$temp_dir" || {
-            echo -e "${RED}Failed to download security checker using git.${NC}"
+        # Download the repository using git into the subdirectory
+        git clone https://github.com/ogbeh/Sec-Chek.git "$clone_dir" 2>/dev/null || {
+            echo -e "${RED}Failed to download security checker using git.${NC}" >&2
             rm -rf "$temp_dir"
-            exit 1
+            return 1
         }
+        
+        # Move files from clone directory to temp directory
+        mv "$clone_dir"/* "$temp_dir/"
+        rm -rf "$clone_dir"
     else
         echo -e "${YELLOW}Git is not installed. Using alternative download method...${NC}"
         
@@ -152,7 +155,7 @@ download_security_checker() {
             curl -L https://github.com/ogbeh/Sec-Chek/archive/master.zip -o "$temp_dir/sec-chek.zip" || {
                 echo -e "${RED}Failed to download security checker using curl.${NC}"
                 rm -rf "$temp_dir"
-                exit 1
+                return 1
             }
             
             # Check if unzip is installed
@@ -161,7 +164,7 @@ download_security_checker() {
                 unzip -q "$temp_dir/sec-chek.zip" -d "$temp_dir" || {
                     echo -e "${RED}Failed to extract the downloaded file.${NC}"
                     rm -rf "$temp_dir"
-                    exit 1
+                    return 1
                 }
                 # Move files from the extracted directory to temp_dir
                 mv "$temp_dir/Sec-Chek-master"/* "$temp_dir/"
@@ -169,7 +172,7 @@ download_security_checker() {
             else
                 echo -e "${RED}unzip is not installed. Please install unzip or git to continue.${NC}"
                 rm -rf "$temp_dir"
-                exit 1
+                return 1
             fi
         # Check if wget is installed
         elif command -v wget &> /dev/null; then
@@ -178,7 +181,7 @@ download_security_checker() {
             wget -q https://github.com/ogbeh/Sec-Chek/archive/master.zip -O "$temp_dir/sec-chek.zip" || {
                 echo -e "${RED}Failed to download security checker using wget.${NC}"
                 rm -rf "$temp_dir"
-                exit 1
+                return 1
             }
             
             # Check if unzip is installed
@@ -187,7 +190,7 @@ download_security_checker() {
                 unzip -q "$temp_dir/sec-chek.zip" -d "$temp_dir" || {
                     echo -e "${RED}Failed to extract the downloaded file.${NC}"
                     rm -rf "$temp_dir"
-                    exit 1
+                    return 1
                 }
                 # Move files from the extracted directory to temp_dir
                 mv "$temp_dir/Sec-Chek-master"/* "$temp_dir/"
@@ -195,7 +198,7 @@ download_security_checker() {
             else
                 echo -e "${RED}unzip is not installed. Please install unzip or git to continue.${NC}"
                 rm -rf "$temp_dir"
-                exit 1
+                return 1
             fi
         else
             echo -e "${RED}Neither git, curl, nor wget is installed. Please install one of them to continue.${NC}"
@@ -204,17 +207,17 @@ download_security_checker() {
             echo -e "  - For CentOS/RHEL: yum install git (or curl/wget)"
             echo -e "  - For Arch Linux: pacman -S git (or curl/wget)"
             rm -rf "$temp_dir"
-            exit 1
+            return 1
         fi
     fi
     
-    # Debug: List the contents of the temp directory
-    echo -e "${BLUE}Contents of downloaded repository:${NC}"
-    ls -la "$temp_dir"
+    # Debug output to stderr so it doesn't mix with the return value
+    echo -e "${BLUE}Contents of downloaded repository:${NC}" >&2
+    ls -la "$temp_dir" >&2
     
     # Check if the download was successful
     if [ ! -f "$temp_dir/sec-chek.py" ]; then
-        echo -e "${RED}Downloaded repository does not contain sec-chek.py${NC}"
+        echo -e "${RED}Downloaded repository does not contain sec-chek.py${NC}" >&2
         echo -e "${YELLOW}Checking for alternative locations...${NC}"
         
         # Try to find the file in the repository
@@ -234,13 +237,13 @@ download_security_checker() {
             echo -e "${YELLOW}Directory contents:${NC}"
             ls -la "$temp_dir"
             rm -rf "$temp_dir"
-            exit 1
+            return 1
         fi
     fi
     
-    echo -e "${GREEN}Download successful!${NC}"
-    # Return only the directory path by reading from the temporary file
-    cat "$temp_dir/path"
+    echo -e "${GREEN}Download successful!${NC}" >&2
+    # Return only the directory path
+    echo "$temp_dir"
 }
 
 # Function to check if security checker is already installed
@@ -306,7 +309,16 @@ mkdir -p "$INSTALL_DIR"
 
 # Download the security checker
 echo -e "${BLUE}Downloading security checker...${NC}"
-TEMP_DIR=$(download_security_checker | tail -n 1)
+TEMP_DIR=$(download_security_checker) || {
+    echo -e "${RED}Failed to download security checker${NC}"
+    exit 1
+}
+
+if [ -z "$TEMP_DIR" ]; then
+    echo -e "${RED}Failed to get temporary directory path${NC}"
+    exit 1
+fi
+
 echo -e "${BLUE}Using temporary directory: $TEMP_DIR${NC}"
 
 # Check if the source file exists
