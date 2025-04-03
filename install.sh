@@ -235,6 +235,7 @@ download_security_checker() {
     fi
     
     echo -e "${GREEN}Download successful!${NC}"
+    # Return only the directory path, not any debug output
     echo "$temp_dir"
 }
 
@@ -300,10 +301,12 @@ mkdir -p "$BIN_DIR"
 mkdir -p "$INSTALL_DIR"
 
 # Download the security checker
+echo -e "${BLUE}Downloading security checker...${NC}"
 TEMP_DIR=$(download_security_checker)
-SOURCE_FILE="$TEMP_DIR/sec-chek.py"
+echo -e "${BLUE}Using temporary directory: $TEMP_DIR${NC}"
 
 # Check if the source file exists
+SOURCE_FILE="$TEMP_DIR/sec-chek.py"
 if [ ! -f "$SOURCE_FILE" ]; then
     echo -e "${RED}Error: Could not find sec-chek.py in the downloaded repository${NC}"
     echo -e "${YELLOW}Expected file location: $SOURCE_FILE${NC}"
