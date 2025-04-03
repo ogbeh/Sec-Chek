@@ -139,9 +139,22 @@ download_security_checker() {
     
     # Check if the download was successful
     if [ ! -f "$temp_dir/src/security_checker.py" ]; then
-        echo -e "${RED}Downloaded repository does not contain security_checker.py${NC}"
-        rm -rf "$temp_dir"
-        exit 1
+        echo -e "${RED}Downloaded repository does not contain security_checker.py in src directory${NC}"
+        echo -e "${YELLOW}Checking for alternative locations...${NC}"
+        
+        # Try to find the file in the repository
+        if [ -f "$temp_dir/security_checker.py" ]; then
+            echo -e "${GREEN}Found security_checker.py in root directory${NC}"
+            # Create src directory if it doesn't exist
+            mkdir -p "$temp_dir/src"
+            # Move the file to src directory
+            mv "$temp_dir/security_checker.py" "$temp_dir/src/"
+        else
+            echo -e "${YELLOW}Directory contents:${NC}"
+            ls -la "$temp_dir"
+            rm -rf "$temp_dir"
+            exit 1
+        fi
     fi
     
     echo -e "${GREEN}Download successful!${NC}"
@@ -207,7 +220,7 @@ BIN_DIR="/usr/local/bin"
 # Create necessary directories
 echo -e "${BLUE}Creating installation directories...${NC}"
 mkdir -p "$BIN_DIR"
-mkdir -p "$INSTALL_DIR"
+mkdir -p "$INSTALL_DIR/src"
 
 # Download the security checker
 TEMP_DIR=$(download_security_checker)
@@ -225,12 +238,12 @@ fi
 
 # Copy the script
 echo -e "${BLUE}Copying security checker script...${NC}"
-cp "$SOURCE_FILE" "$INSTALL_DIR/"
-chmod +x "$INSTALL_DIR/security_checker.py"
+cp "$SOURCE_FILE" "$INSTALL_DIR/src/"
+chmod +x "$INSTALL_DIR/src/security_checker.py"
 
 # Verify the file was copied successfully
-if [ ! -f "$INSTALL_DIR/security_checker.py" ]; then
-    echo -e "${RED}Error: Failed to copy security_checker.py to $INSTALL_DIR${NC}"
+if [ ! -f "$INSTALL_DIR/src/security_checker.py" ]; then
+    echo -e "${RED}Error: Failed to copy security_checker.py to $INSTALL_DIR/src${NC}"
     rm -rf "$TEMP_DIR"
     exit 1
 fi
@@ -275,7 +288,7 @@ def run_check(check_type):
     print()
     
     # Run the security checker with the appropriate option
-    cmd = ["python3", "/opt/sec-chek/security_checker.py", check_type]
+    cmd = ["python3", "/opt/sec-chek/src/security_checker.py", check_type]
     process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     
     # Show a simple progress indicator
@@ -351,7 +364,7 @@ if [ \$# -eq 0 ]; then
     python3 "$INSTALL_DIR/menu.py"
 else
     # Arguments provided, run the security checker with those arguments
-    python3 "$INSTALL_DIR/security_checker.py" "\$@"
+    python3 "$INSTALL_DIR/src/security_checker.py" "\$@"
 fi
 EOL
 
@@ -372,13 +385,13 @@ echo -e "${GREEN}=== Running security check now... ===${NC}"
 echo -e "${BLUE}This may take a few minutes...${NC}"
 
 # Check if the security checker exists before running it
-if [ ! -f "$INSTALL_DIR/security_checker.py" ]; then
-    echo -e "${RED}Error: security_checker.py not found at $INSTALL_DIR/security_checker.py${NC}"
+if [ ! -f "$INSTALL_DIR/src/security_checker.py" ]; then
+    echo -e "${RED}Error: security_checker.py not found at $INSTALL_DIR/src/security_checker.py${NC}"
     echo -e "${YELLOW}Skipping initial security check.${NC}"
     echo -e "You can run the security checker manually by typing: ${GREEN}sudo security-checker${NC}"
 else
     # Run the security checker in the background and show progress
-    python3 "$INSTALL_DIR/security_checker.py" &
+    python3 "$INSTALL_DIR/src/security_checker.py" &
     SECURITY_CHECK_PID=$!
     show_progress $SECURITY_CHECK_PID "Running security check..."
 
