@@ -70,6 +70,7 @@ uninstall() {
 # Main menu
 while true; do
     show_banner
+    echo -e "${BLUE}Select an option:${NC}"
     echo "1. Check Firewall Status"
     echo "2. Check Open Ports"
     echo "3. Check System Updates"
@@ -77,21 +78,50 @@ while true; do
     echo "5. Uninstall SEC-CHEK"
     echo "0. Exit"
     
-    read -p "Select an option: " choice
+    # Improved input handling
+    read -r -p "Enter your choice (0-5): " choice
     
+    # Clear any remaining input in the buffer
+    while read -r -t 0; do read -r; done
+    
+    # Input validation
+    if ! [[ "$choice" =~ ^[0-5]$ ]]; then
+        echo -e "${RED}[!] Invalid option. Please enter a number between 0 and 5${NC}"
+        sleep 2
+        continue
+    fi
+    
+    clear
     case $choice in
-        1) check_firewall ;;
-        2) check_ports ;;
-        3) check_updates ;;
+        1) 
+            check_firewall
+            ;;
+        2)
+            check_ports
+            ;;
+        3)
+            check_updates
+            ;;
         4)
             check_firewall
             check_ports
             check_updates
             ;;
-        5) uninstall ;;
-        0) exit 0 ;;
-        *) echo -e "${RED}[!] Invalid option${NC}" ;;
+        5)
+            echo -e "${YELLOW}Are you sure you want to uninstall SEC-CHEK? (y/n)${NC}"
+            read -r -p "" confirm
+            if [[ "$confirm" =~ ^[Yy]$ ]]; then
+                uninstall
+            fi
+            ;;
+        0)
+            echo -e "${GREEN}Exiting SEC-CHEK. Goodbye!${NC}"
+            exit 0
+            ;;
     esac
     
-    read -p "Press Enter to continue..."
+    echo
+    echo -e "${YELLOW}Press Enter to return to the main menu...${NC}"
+    read -r
+    clear
 done 
