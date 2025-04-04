@@ -207,19 +207,41 @@ uninstall() {
 check_updates() {
     log_message "Checking for updates..." "INFO"
     
-    # Create temporary file
-    local temp_file=$(mktemp)
+    # Create temporary directory for update process
+    local temp_dir=$(mktemp -d)
+    local temp_file="$temp_dir/sec-chek.sh"
     
-    # Download latest version
-    if ! curl -s "$GITHUB_RAW" -o "$temp_file"; then
-        log_message "Failed to check for updates" "ERROR"
-        rm -f "$temp_file"
+    # First, verify GitHub repository exists and is accessible
+    if ! curl -s -I "https://github.com/$GITHUB_REPO" | grep -q "200 OK"; then
+        log_message "Failed to access GitHub repository" "ERROR"
+        rm -rf "$temp_dir"
         return 1
     fi
     
-    # Get version from downloaded file
-    local latest_version=$(grep -m 1 'VERSION=' "$temp_file" | cut -d'"' -f2)
+    # Download the current version info
+    if ! curl -s "https://raw.githubusercontent.com/$GITHUB_REPO/main/sec-chek.sh" -o "$temp_file"; then
+        log_message "Failed to download update information" "ERROR"
+        rm -rf "$temp_dir"
+        return 1
+    fi
     
+    # Verify the downloaded file
+    if [ ! -s "$temp_file" ]; then
+        log_message "Downloaded file is empty" "ERROR"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+    
+    # Get the version from the downloaded file
+    local latest_version=$(grep -m 1 '^VERSION=' "$temp_file" | cut -d'"' -f2)
+    
+    if [ -z "$latest_version" ]; then
+        log_message "Could not determine latest version" "ERROR"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+    
+    # Compare versions
     if [ "$latest_version" != "$VERSION" ]; then
         echo -e "${YELLOW}New version $latest_version available (current: $VERSION)${NC}"
         read -p "Do you want to update? (y/n): " choice
@@ -227,14 +249,32 @@ check_updates() {
             # Create backup before update
             create_backup
             
-            # Update the script
-            if mv "$temp_file" "/usr/local/bin/$SCRIPT_NAME" && chmod +x "/usr/local/bin/$SCRIPT_NAME"; then
+            # Verify the script is a valid shell script
+            if ! head -n 1 "$temp_file" | grep -q "^#!/bin/bash"; then
+                log_message "Downloaded file is not a valid shell script" "ERROR"
+                rm -rf "$temp_dir"
+                return 1
+            fi
+            
+            # Make the new version executable
+            chmod +x "$temp_file"
+            
+            # Test run the new version
+            if ! "$temp_file" --version &>/dev/null; then
+                log_message "New version failed validation test" "ERROR"
+                rm -rf "$temp_dir"
+                return 1
+            fi
+            
+            # If all checks pass, install the new version
+            if mv "$temp_file" "/usr/local/bin/sec-chek"; then
                 log_message "Successfully updated to version $latest_version" "INFO"
                 echo -e "${GREEN}Update successful! Please restart the script.${NC}"
+                rm -rf "$temp_dir"
                 exit 0
             else
-                log_message "Failed to update script" "ERROR"
-                rm -f "$temp_file"
+                log_message "Failed to install new version" "ERROR"
+                rm -rf "$temp_dir"
                 return 1
             fi
         else
@@ -244,7 +284,7 @@ check_updates() {
         log_message "You are running the latest version ($VERSION)" "INFO"
     fi
     
-    rm -f "$temp_file"
+    rm -rf "$temp_dir"
 }
 
 # Main script
