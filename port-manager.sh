@@ -11,9 +11,9 @@ NC='\033[0m' # No Color
 VERSION="1.0.0"
 
 # Configuration
-CONFIG_DIR="/etc/port-manager"
-LOG_FILE="/var/log/port-manager.log"
-BACKUP_DIR="/etc/port-manager/backups"
+CONFIG_DIR="/etc/sec-chek"
+LOG_FILE="/var/log/sec-chek.log"
+BACKUP_DIR="/etc/sec-chek/backups"
 SCRIPT_NAME="sec-chek"
 GITHUB_REPO="ogbeh/sec-chek"
 GITHUB_RAW="https://raw.githubusercontent.com/$GITHUB_REPO/main/$SCRIPT_NAME"
@@ -140,7 +140,7 @@ kill_port() {
 
 # Function to show menu
 show_menu() {
-    echo -e "${YELLOW}=== Port Manager v$VERSION ===${NC}"
+    echo -e "${YELLOW}=== Sec-Chek v$VERSION ===${NC}"
     echo "1. Check Firewall Status"
     echo "2. Find Process Using Port"
     echo "3. Kill Process Using Port"
@@ -185,7 +185,7 @@ show_system_info() {
 
 # Function to create backup before uninstallation
 create_backup() {
-    local backup_file="$BACKUP_DIR/port-manager_backup_$(date +%Y%m%d_%H%M%S).tar.gz"
+    local backup_file="$BACKUP_DIR/sec-chek_backup_$(date +%Y%m%d_%H%M%S).tar.gz"
     tar -czf "$backup_file" "$CONFIG_DIR" "$LOG_FILE" 2>/dev/null
     if [ $? -eq 0 ]; then
         log_message "Backup created successfully at $backup_file" "INFO"
@@ -196,11 +196,11 @@ create_backup() {
 
 # Function to uninstall
 uninstall() {
-    log_message "Uninstalling Port Manager..." "INFO"
+    log_message "Uninstalling Sec-Chek..." "INFO"
     create_backup
-    rm -f /usr/local/bin/port-manager
+    rm -f /usr/local/bin/sec-chek
     rm -rf "$CONFIG_DIR"
-    log_message "Port Manager uninstalled successfully" "INFO"
+    log_message "Sec-Chek uninstalled successfully" "INFO"
 }
 
 # Function to check for updates
