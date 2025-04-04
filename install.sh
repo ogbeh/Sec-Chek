@@ -18,7 +18,7 @@ cd "$TMP_DIR"
 
 # Download the script
 echo -e "${YELLOW}Downloading Port Manager...${NC}"
-curl -s https://raw.githubusercontent.com/ogbeh/sec-chek/main/port-manager.sh -o port-manager.sh
+curl -s https://raw.githubusercontent.com/ogbeh/sec-chek/main/sec-chek.sh -o sec-chek.sh
 
 # Check if download was successful
 if [ $? -ne 0 ]; then
@@ -28,13 +28,13 @@ if [ $? -ne 0 ]; then
 fi
 
 # Make the script executable
-chmod +x port-manager.sh
+chmod +x sec-chek.sh
 
 # Move to system directory
-mv port-manager.sh /usr/local/bin/port-manager
+mv sec-chek.sh /usr/local/bin/sec-chek
 
 # Clean up
 rm -rf "$TMP_DIR"
 
 echo -e "${GREEN}Port Manager installed successfully!${NC}"
-echo -e "You can now run it using: ${YELLOW}sudo port-manager${NC}" 
+echo -e "You can now run it using: ${YELLOW}sudo sec-chek${NC}" 

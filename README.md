@@ -35,12 +35,12 @@ cd sec-chek
 
 2. Make the script executable:
 ```bash
-chmod +x port-manager.sh
+chmod +x sec-chek.sh
 ```
 
 3. Move the script to system directory:
 ```bash
-sudo mv port-manager.sh /usr/local/bin/port-manager
+sudo mv sec-chek.sh /usr/local/bin/sec-chek
 ```
 
 ## Usage
@@ -48,7 +48,7 @@ sudo mv port-manager.sh /usr/local/bin/port-manager
 Run the script with sudo privileges:
 
 ```bash
-sudo port-manager
+sudo sec-chek
 ```
 
 ## Menu Options
@@ -65,7 +65,7 @@ sudo port-manager
 You can uninstall the script either through the menu option (Option 5) or manually:
 
 ```bash
-sudo rm /usr/local/bin/port-manager
+sudo rm /usr/local/bin/sec-chek
 ```
 
 ## Contributing

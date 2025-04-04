@@ -133,7 +133,7 @@ list_ports() {
 # Function to uninstall
 uninstall() {
     echo -e "${YELLOW}Uninstalling Port Manager...${NC}"
-    rm -f /usr/local/bin/port-manager
+    rm -f /usr/local/bin/sec-chek
     echo -e "${GREEN}Port Manager uninstalled successfully${NC}"
 }
 
