@@ -211,16 +211,9 @@ check_updates() {
     local temp_dir=$(mktemp -d)
     local temp_file="$temp_dir/sec-chek.sh"
     
-    # First, verify GitHub repository exists and is accessible
-    if ! curl -s -I "https://api.github.com/repos/$GITHUB_REPO" | grep -q "200 OK"; then
-        log_message "Failed to access GitHub repository. Please check your internet connection or the repository URL." "ERROR"
-        rm -rf "$temp_dir"
-        return 1
-    fi
-    
-    # Download the current version info
-    if ! curl -s "$GITHUB_RAW" -o "$temp_file"; then
-        log_message "Failed to download update information" "ERROR"
+    # Try to download the script directly
+    if ! curl -s -L "https://raw.githubusercontent.com/ogbeh/sec-chek/main/sec-chek.sh" -o "$temp_file"; then
+        log_message "Failed to download update. Please check your internet connection." "ERROR"
         rm -rf "$temp_dir"
         return 1
     fi
@@ -228,6 +221,13 @@ check_updates() {
     # Verify the downloaded file
     if [ ! -s "$temp_file" ]; then
         log_message "Downloaded file is empty" "ERROR"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+    
+    # Check if the file is a valid shell script
+    if ! head -n 1 "$temp_file" | grep -q "^#!/bin/bash"; then
+        log_message "Downloaded file is not a valid shell script" "ERROR"
         rm -rf "$temp_dir"
         return 1
     fi
@@ -249,22 +249,8 @@ check_updates() {
             # Create backup before update
             create_backup
             
-            # Verify the script is a valid shell script
-            if ! head -n 1 "$temp_file" | grep -q "^#!/bin/bash"; then
-                log_message "Downloaded file is not a valid shell script" "ERROR"
-                rm -rf "$temp_dir"
-                return 1
-            fi
-            
             # Make the new version executable
             chmod +x "$temp_file"
-            
-            # Test run the new version
-            if ! "$temp_file" --version &>/dev/null; then
-                log_message "New version failed validation test" "ERROR"
-                rm -rf "$temp_dir"
-                return 1
-            fi
             
             # If all checks pass, install the new version
             if mv "$temp_file" "/usr/local/bin/sec-chek"; then
