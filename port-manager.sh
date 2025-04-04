@@ -14,6 +14,9 @@ VERSION="1.0.0"
 CONFIG_DIR="/etc/port-manager"
 LOG_FILE="/var/log/port-manager.log"
 BACKUP_DIR="/etc/port-manager/backups"
+SCRIPT_NAME="sec-chek"
+GITHUB_REPO="ogbeh/sec-chek"
+GITHUB_RAW="https://raw.githubusercontent.com/$GITHUB_REPO/main/$SCRIPT_NAME"
 
 # Function to log messages
 log_message() {
@@ -144,8 +147,9 @@ show_menu() {
     echo "4. List All Open Ports"
     echo "5. Check Port Status"
     echo "6. Show System Information"
-    echo "7. Uninstall"
-    echo "8. Exit"
+    echo "7. Check for Updates"
+    echo "8. Uninstall"
+    echo "9. Exit"
     echo
 }
 
@@ -199,6 +203,50 @@ uninstall() {
     log_message "Port Manager uninstalled successfully" "INFO"
 }
 
+# Function to check for updates
+check_updates() {
+    log_message "Checking for updates..." "INFO"
+    
+    # Create temporary file
+    local temp_file=$(mktemp)
+    
+    # Download latest version
+    if ! curl -s "$GITHUB_RAW" -o "$temp_file"; then
+        log_message "Failed to check for updates" "ERROR"
+        rm -f "$temp_file"
+        return 1
+    fi
+    
+    # Get version from downloaded file
+    local latest_version=$(grep -m 1 'VERSION=' "$temp_file" | cut -d'"' -f2)
+    
+    if [ "$latest_version" != "$VERSION" ]; then
+        echo -e "${YELLOW}New version $latest_version available (current: $VERSION)${NC}"
+        read -p "Do you want to update? (y/n): " choice
+        if [[ $choice =~ ^[Yy]$ ]]; then
+            # Create backup before update
+            create_backup
+            
+            # Update the script
+            if mv "$temp_file" "/usr/local/bin/$SCRIPT_NAME" && chmod +x "/usr/local/bin/$SCRIPT_NAME"; then
+                log_message "Successfully updated to version $latest_version" "INFO"
+                echo -e "${GREEN}Update successful! Please restart the script.${NC}"
+                exit 0
+            else
+                log_message "Failed to update script" "ERROR"
+                rm -f "$temp_file"
+                return 1
+            fi
+        else
+            log_message "Update cancelled by user" "INFO"
+        fi
+    else
+        log_message "You are running the latest version ($VERSION)" "INFO"
+    fi
+    
+    rm -f "$temp_file"
+}
+
 # Main script
 check_root
 setup_directories
@@ -206,7 +254,7 @@ check_requirements
 
 while true; do
     show_menu
-    read -p "Enter your choice (1-8): " choice
+    read -p "Enter your choice (1-9): " choice
     
     case $choice in
         1) check_firewall ;;
@@ -215,8 +263,9 @@ while true; do
         4) list_ports ;;
         5) check_port_status ;;
         6) show_system_info ;;
-        7) uninstall; exit 0 ;;
-        8) echo -e "${GREEN}Goodbye!${NC}"; exit 0 ;;
+        7) check_updates ;;
+        8) uninstall; exit 0 ;;
+        9) echo -e "${GREEN}Goodbye!${NC}"; exit 0 ;;
         *) log_message "Invalid option" "ERROR" ;;
     esac
     echo
