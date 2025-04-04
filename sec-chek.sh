@@ -211,23 +211,26 @@ check_updates() {
     local temp_dir=$(mktemp -d)
     local temp_file="$temp_dir/sec-chek.sh"
     
-    # Try to download the script directly
-    if ! curl -s -L "https://raw.githubusercontent.com/ogbeh/sec-chek/main/sec-chek.sh" -o "$temp_file"; then
-        log_message "Failed to download update. Please check your internet connection." "ERROR"
+    # Try to download the script with verbose error output
+    local curl_output=$(curl -s -w "%{http_code}" -L "https://raw.githubusercontent.com/ogbeh/sec-chek/main/sec-chek.sh" -o "$temp_file" 2>&1)
+    local http_code=${curl_output: -3}
+    
+    if [ "$http_code" != "200" ]; then
+        log_message "Failed to access GitHub repository (HTTP Code: $http_code). Please check your internet connection and ensure the repository exists." "ERROR"
         rm -rf "$temp_dir"
         return 1
     fi
     
     # Verify the downloaded file
     if [ ! -s "$temp_file" ]; then
-        log_message "Downloaded file is empty" "ERROR"
+        log_message "Downloaded file is empty. Please check your internet connection." "ERROR"
         rm -rf "$temp_dir"
         return 1
     fi
     
     # Check if the file is a valid shell script
     if ! head -n 1 "$temp_file" | grep -q "^#!/bin/bash"; then
-        log_message "Downloaded file is not a valid shell script" "ERROR"
+        log_message "Downloaded file is not a valid shell script. The file may be corrupted." "ERROR"
         rm -rf "$temp_dir"
         return 1
     fi
@@ -236,7 +239,7 @@ check_updates() {
     local latest_version=$(grep -m 1 '^VERSION=' "$temp_file" | cut -d'"' -f2)
     
     if [ -z "$latest_version" ]; then
-        log_message "Could not determine latest version" "ERROR"
+        log_message "Could not determine latest version. The file may be corrupted or in an unexpected format." "ERROR"
         rm -rf "$temp_dir"
         return 1
     fi
@@ -259,7 +262,7 @@ check_updates() {
                 rm -rf "$temp_dir"
                 exit 0
             else
-                log_message "Failed to install new version" "ERROR"
+                log_message "Failed to install new version. Please check file permissions." "ERROR"
                 rm -rf "$temp_dir"
                 return 1
             fi
