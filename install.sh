@@ -17,12 +17,12 @@ TMP_DIR=$(mktemp -d)
 cd "$TMP_DIR"
 
 # Download the script
-echo -e "${YELLOW}Downloading Port Manager...${NC}"
+echo -e "${YELLOW}Downloading sec-chekr...${NC}"
 curl -s https://raw.githubusercontent.com/ogbeh/sec-chek/main/sec-chek.sh -o sec-chek.sh
 
 # Check if download was successful
 if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed to download Port Manager${NC}"
+    echo -e "${RED}Failed to download sec-chekr${NC}"
     rm -rf "$TMP_DIR"
     exit 1
 fi
@@ -36,5 +36,5 @@ mv sec-chek.sh /usr/local/bin/sec-chek
 # Clean up
 rm -rf "$TMP_DIR"
 
-echo -e "${GREEN}Port Manager installed successfully!${NC}"
+echo -e "${GREEN}sec-chek installed successfully!${NC}"
 echo -e "You can now run it using: ${YELLOW}sudo sec-chek${NC}" 

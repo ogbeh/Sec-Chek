@@ -1,4 +1,4 @@
-# Port Manager
+# sec-chekr
 
 A powerful Bash script for managing ports and checking firewall status on Linux systems.
 

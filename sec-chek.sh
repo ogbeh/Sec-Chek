@@ -102,7 +102,7 @@ kill_port() {
 
 # Function to show menu
 show_menu() {
-    echo -e "${YELLOW}=== Port Manager v$VERSION ===${NC}"
+    echo -e "${YELLOW}=== sec-chekr v$VERSION ===${NC}"
     echo "1. Check Firewall Status"
     echo "2. Find Process Using Port"
     echo "3. Kill Process Using Port"
@@ -132,9 +132,9 @@ list_ports() {
 
 # Function to uninstall
 uninstall() {
-    echo -e "${YELLOW}Uninstalling Port Manager...${NC}"
+    echo -e "${YELLOW}Uninstalling sec-chekr...${NC}"
     rm -f /usr/local/bin/sec-chek
-    echo -e "${GREEN}Port Manager uninstalled successfully${NC}"
+    echo -e "${GREEN}sec-chekr uninstalled successfully${NC}"
 }
 
 # Main script
