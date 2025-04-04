@@ -16,7 +16,7 @@ LOG_FILE="/var/log/sec-chek.log"
 BACKUP_DIR="/etc/sec-chek/backups"
 SCRIPT_NAME="sec-chek"
 GITHUB_REPO="ogbeh/sec-chek"
-GITHUB_RAW="https://raw.githubusercontent.com/$GITHUB_REPO/main/$SCRIPT_NAME"
+GITHUB_RAW="https://raw.githubusercontent.com/$GITHUB_REPO/main/sec-chek.sh"
 
 # Function to log messages
 log_message() {
@@ -212,14 +212,14 @@ check_updates() {
     local temp_file="$temp_dir/sec-chek.sh"
     
     # First, verify GitHub repository exists and is accessible
-    if ! curl -s -I "https://github.com/$GITHUB_REPO" | grep -q "200 OK"; then
-        log_message "Failed to access GitHub repository" "ERROR"
+    if ! curl -s -I "https://api.github.com/repos/$GITHUB_REPO" | grep -q "200 OK"; then
+        log_message "Failed to access GitHub repository. Please check your internet connection or the repository URL." "ERROR"
         rm -rf "$temp_dir"
         return 1
     fi
     
     # Download the current version info
-    if ! curl -s "https://raw.githubusercontent.com/$GITHUB_REPO/main/sec-chek.sh" -o "$temp_file"; then
+    if ! curl -s "$GITHUB_RAW" -o "$temp_file"; then
         log_message "Failed to download update information" "ERROR"
         rm -rf "$temp_dir"
         return 1
